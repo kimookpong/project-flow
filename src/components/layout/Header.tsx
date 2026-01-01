@@ -28,7 +28,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
 
     return (
         <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-[#282e39] px-4 md:px-6 py-4 bg-white/95 dark:bg-[#101622]/95 backdrop-blur sticky top-0 z-30">
-            <div className="flex items-center gap-4 md:gap-6 w-full max-w-2xl">
+            <div className="flex items-center gap-2 md:gap-2 w-full max-w-2xl">
                 {/* Mobile menu button */}
                 <button
                     onClick={onMenuClick}
@@ -61,7 +61,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                 </form>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 md:gap-3 pl-2">
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}

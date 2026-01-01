@@ -69,6 +69,12 @@ function DroppableColumn({ id, children, count, onAddClick }: DroppableColumnPro
                         {count}
                     </span>
                 </div>
+                <button
+                    onClick={onAddClick}
+                    className="text-gray-400 hover:text-[#135bec] hover:bg-[#135bec]/10 p-1 rounded transition-colors"
+                >
+                    <span className="material-symbols-outlined text-[20px]">add</span>
+                </button>
             </div>
 
             {/* Column Content */}
@@ -78,13 +84,7 @@ function DroppableColumn({ id, children, count, onAddClick }: DroppableColumnPro
                 </div>
             </div>
 
-            <button
-                onClick={onAddClick}
-                className="mt-3 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-gray-500 hover:text-[#135bec] hover:border-[#135bec]/50 hover:bg-[#135bec]/5 transition-colors text-sm font-medium"
-            >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                เพิ่มงานใน {config.label}
-            </button>
+
         </div>
     )
 }
@@ -308,12 +308,12 @@ export function TasksPage() {
         }
     }
 
-    const openCreateModal = () => {
+    const openCreateModal = (initialStatus: TaskStatus = 'todo') => {
         setEditingTask(null)
         setFormData({
             title: '',
             description: '',
-            status: 'todo',
+            status: typeof initialStatus === 'string' ? initialStatus : 'todo',
             priority: 'medium',
             projectId: projects[0]?.id || '',
             assigneeId: user?.id || '',
@@ -408,7 +408,7 @@ export function TasksPage() {
                     </button>
                 </div>
 
-                <Button icon="add" onClick={openCreateModal}>สร้างงานใหม่</Button>
+                <Button icon="add" onClick={() => openCreateModal('todo')}>สร้างงานใหม่</Button>
             </div>
 
             {/* Kanban Board */}
@@ -430,7 +430,7 @@ export function TasksPage() {
                                     key={status}
                                     id={status}
                                     count={statusTasks.length}
-                                    onAddClick={openCreateModal}
+                                    onAddClick={() => openCreateModal(status)}
                                 >
                                     <SortableContext
                                         id={status}

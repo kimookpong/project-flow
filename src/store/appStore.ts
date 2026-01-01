@@ -16,6 +16,7 @@ type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 type ProjectUpdate = Database['public']['Tables']['projects']['Update']
 type TaskInsert = Database['public']['Tables']['tasks']['Insert']
 type TaskUpdate = Database['public']['Tables']['tasks']['Update']
+type NotificationInsert = Database['public']['Tables']['notifications']['Insert']
 type IncomeInsert = Database['public']['Tables']['project_income']['Insert']
 type ExpenseInsert = Database['public']['Tables']['project_expenses']['Insert']
 
@@ -176,6 +177,8 @@ interface AppState {
     isLoading: boolean
     error: string | null
 
+    sendNotification: (notification: Omit<NotificationInsert, 'created_at' | 'is_read'>) => Promise<void>
+
     // Actions
     loadAllData: () => Promise<void>
     loadProjects: () => Promise<void>
@@ -233,6 +236,34 @@ export const useAppStore = create<AppState>((set, get) => ({
     revenueShares: [],
     isLoading: false,
     error: null,
+
+    // Internal helper for sending notifications
+    sendNotification: async (notification: Omit<NotificationInsert, 'created_at' | 'is_read'>) => {
+        if (isDemoMode()) {
+            const newNotification: Notification = {
+                id: `notif-${Date.now()}`,
+                ...notification,
+                content: notification.content || null,
+                reference_id: notification.reference_id || null,
+                reference_type: notification.reference_type || null,
+                is_read: false,
+                created_at: new Date().toISOString(),
+            } as Notification
+            set(state => ({ notifications: [newNotification, ...state.notifications] }))
+            return
+        }
+
+        try {
+            const newNotification = await api.createNotification(notification)
+            // If the notification is for the current user (unlikely but possible), add it to state
+            // But usually we just fire and forget, or if we want real-time we rely on subscription
+            // For now, let's update local state optimistically or just rely on reload?
+            // Proactive update for now:
+            set(state => ({ notifications: [newNotification, ...state.notifications] }))
+        } catch (error) {
+            console.error('Error sending notification:', error)
+        }
+    },
 
     // Load all data
     loadAllData: async () => {
@@ -433,6 +464,19 @@ export const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             console.error('Error adding project member:', error)
             throw error
+        } finally {
+            // Send notification to the new member
+            const project = get().projects.find(p => p.id === projectId)
+            if (project) {
+                get().sendNotification({
+                    user_id: userId,
+                    type: 'mention',
+                    title: 'คุณถูกเพิ่มในโปรเจกต์',
+                    content: `คุณถูกเพิ่มเป็นสมาชิกในโปรเจกต์ "${project.name}"`,
+                    reference_id: projectId,
+                    reference_type: 'project'
+                })
+            }
         }
     },
 
@@ -481,6 +525,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         const newTask = await api.createTask(task)
         set(state => ({ tasks: [...state.tasks, newTask] }))
+
+        // Notification: Task Assigned
+        if (task.assignee_id && task.assignee_id !== task.created_by) {
+            const creator = get().members.find(m => m.id === task.created_by)
+            get().sendNotification({
+                user_id: task.assignee_id,
+                type: 'task_assigned',
+                title: 'งานใหม่ได้รับมอบหมาย',
+                content: `${creator?.full_name || 'มีคน'} มอบหมายงาน "${task.title}" ให้คุณ`,
+                reference_id: newTask.id,
+                reference_type: 'task'
+            })
+        }
+
         return newTask
     },
 
@@ -496,6 +554,36 @@ export const useAppStore = create<AppState>((set, get) => ({
         set(state => ({
             tasks: state.tasks.map(t => t.id === id ? { ...t, ...(data as any) } : t)
         }))
+
+        // Notifications
+        const task = get().tasks.find(t => t.id === id)
+        if (!task) return
+
+        // 1. Task Assigned Changed
+        if (data.assignee_id && data.assignee_id !== task.assignee_id) {
+            get().sendNotification({
+                user_id: data.assignee_id,
+                type: 'task_assigned',
+                title: 'งานใหม่ได้รับมอบหมาย',
+                content: `งาน "${task.title}" ถูกมอบหมายให้คุณ`,
+                reference_id: task.id,
+                reference_type: 'task'
+            })
+        }
+
+        // 2. Status Changed (Notify Assignee)
+        if (data.status && data.status !== task.status && task.assignee_id) {
+            // Don't notify if the person changing it is the assignee (basic check, usually need auth context here but simple check helps)
+            // For now just notify assignee always if they exist
+            get().sendNotification({
+                user_id: task.assignee_id,
+                type: 'status_change',
+                title: 'สถานะงานอัปเดต',
+                content: `งาน "${task.title}" เปลี่ยนสถานะเป็น ${data.status}`,
+                reference_id: task.id,
+                reference_type: 'task'
+            })
+        }
     },
 
     deleteTask: async (id) => {

@@ -256,6 +256,20 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
     if (error) throw error
 }
 
+export async function createNotification(notification: TableInsert<'notifications'>): Promise<Notification> {
+    const { data, error } = await (supabase
+        .from('notifications') as any)
+        .insert({
+            ...notification,
+            created_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
+}
+
 // =============================================
 // Project Income
 // =============================================

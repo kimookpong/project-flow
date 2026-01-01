@@ -23,22 +23,6 @@ export function ProjectsPage() {
                 </Link>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-2">
-                <button className="px-4 py-2 rounded-lg bg-[#135bec]/10 text-[#135bec] text-sm font-medium">
-                    ทั้งหมด
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#282e39] text-gray-500 dark:text-[#9da6b9] hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors">
-                    กำลังดำเนินการ
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#282e39] text-gray-500 dark:text-[#9da6b9] hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors">
-                    เสร็จสิ้น
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#282e39] text-gray-500 dark:text-[#9da6b9] hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors">
-                    รอดำเนินการ
-                </button>
-            </div>
-
             {/* Projects Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projects.map((project) => (
