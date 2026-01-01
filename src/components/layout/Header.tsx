@@ -21,8 +21,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
         if (searchQuery.trim()) {
-            // TODO: Implement search functionality
-            console.log('Search:', searchQuery)
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
         }
     }
 

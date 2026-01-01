@@ -16,6 +16,7 @@ import {
   EditProjectPage,
   ProjectFilesPage,
   ProjectTimelinePage,
+  SearchPage,
 } from '@/pages'
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="/team" element={<TeamPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/search" element={<SearchPage />} />
           </Route>
 
           {/* Fallback */}
